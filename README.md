@@ -6,7 +6,8 @@
 
 ## Project Description
 
-This project implements a real-time GPS L1 C/A receiver using Software-Defined Radio (SDR) technology, written in modern C++17. It demonstrates advanced real-time programming techniques including SIMD optimization, multithreading, and lock-free data structures to achieve high-performance signal processing. It is still in development feel free to suggest for improvements
+This project implements a real-time GPS L1 C/A receiver using Software-Defined Radio (SDR) technology, written in modern C++17. It demonstrates advanced real-time programming techniques including SIMD optimization, multithreading, and lock-free data structures to achieve high-performance signal processing. 
+<span style="color: red;">It is still in development feel free to suggest for improvements</span>
 
 
 - **Real-time GPS signal acquisition and tracking**
