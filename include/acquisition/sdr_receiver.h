@@ -7,7 +7,7 @@
 #include <queue>
 #include <thread>
 #include <memory>
-#include "utils/gps-constants.h"
+#include "utils/gps_constants.h"
 
 namespace gps {
 
