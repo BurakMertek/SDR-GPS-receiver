@@ -1,0 +1,17 @@
+build/
+cmake-build-*/
+*.bin
+*.o
+*.so
+*.a
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+*.tmp
+*.log
+data/*.bin
+!data/gps_samples.bin
+EOF
