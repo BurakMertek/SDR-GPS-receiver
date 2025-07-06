@@ -6,7 +6,7 @@
 #include <thread>
 #include <atomic>
 #include "utils/gps_constants.h"
-
+#include "tracking/correlator.h"
 
 namespace gps {
 
@@ -52,7 +52,7 @@ private:
     ChannelState state_;
     SatelliteInfo sat_info_;
     
-    
+    std::unique_ptr<Correlator> correlator_;
     
     
     double carrier_freq_;
