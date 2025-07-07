@@ -41,7 +41,7 @@ The receiver follows a modular architecture with three main processing stages:
 
 ### Threading Model
 
-```
+
 v<svg viewBox="0 0 1000 600" xmlns="http://www.w3.org/2000/svg">
   <!-- Background with gradient -->
   <defs>
@@ -190,7 +190,8 @@ v<svg viewBox="0 0 1000 600" xmlns="http://www.w3.org/2000/svg">
   <circle cx="80" cy="550" r="5" fill="#feca57"/>
   <text x="95" y="555" fill="#ffffff" font-family="Arial, sans-serif" font-size="12">5. Navigation decoder extracts positioning and timing data</text>
 </svg>
-```
+
+
 
 ## 📈 Performance Characteristics
 
