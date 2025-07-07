@@ -42,16 +42,154 @@ The receiver follows a modular architecture with three main processing stages:
 ### Threading Model
 
 ```
-┌─────────────────┐     ┌──────────────────┐     ┌─────────────────┐
-│   SDR Thread    │────▶│ Sample Buffer    │────▶│ Acquisition     │
-│ (Data Capture)  │     │ (Lock-free FIFO) │     │   Thread Pool   │
-└─────────────────┘     └──────────────────┘     └─────────────────┘
-                                │                         │
-                                ▼                         ▼
-                        ┌──────────────────┐     ┌─────────────────┐
-                        │ Tracking Channels│     │   Navigation    │
-                        │   (Per PRN)      │────▶│    Decoder      │
-                        └──────────────────┘     └─────────────────┘
+v<svg viewBox="0 0 1000 600" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background with gradient -->
+  <defs>
+    <linearGradient id="bgGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#1a1a2e;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#16213e;stop-opacity:1" />
+    </linearGradient>
+    
+    <!-- Box gradients -->
+    <linearGradient id="boxGradient1" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#4a90e2;stop-opacity:0.8" />
+      <stop offset="100%" style="stop-color:#357abd;stop-opacity:0.8" />
+    </linearGradient>
+    
+    <linearGradient id="boxGradient2" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#7b68ee;stop-opacity:0.8" />
+      <stop offset="100%" style="stop-color:#6a5acd;stop-opacity:0.8" />
+    </linearGradient>
+    
+    <linearGradient id="boxGradient3" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#ff6b6b;stop-opacity:0.8" />
+      <stop offset="100%" style="stop-color:#ee5a52;stop-opacity:0.8" />
+    </linearGradient>
+    
+    <linearGradient id="boxGradient4" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#4ecdc4;stop-opacity:0.8" />
+      <stop offset="100%" style="stop-color:#44a08d;stop-opacity:0.8" />
+    </linearGradient>
+    
+    <linearGradient id="boxGradient5" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#feca57;stop-opacity:0.8" />
+      <stop offset="100%" style="stop-color:#ff9ff3;stop-opacity:0.8" />
+    </linearGradient>
+    
+    <!-- Arrow marker definition -->
+    <marker id="arrowhead" markerWidth="12" markerHeight="10" refX="11" refY="5" orient="auto">
+      <polygon points="0 0, 12 5, 0 10" fill="#00d4ff" stroke="#00d4ff" stroke-width="1"/>
+    </marker>
+    
+    <!-- Glow filter -->
+    <filter id="glow">
+      <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
+      <feMerge> 
+        <feMergeNode in="coloredBlur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+    
+    <!-- Drop shadow -->
+    <filter id="dropshadow" x="-50%" y="-50%" width="200%" height="200%">
+      <feDropShadow dx="3" dy="3" stdDeviation="3" flood-color="#000000" flood-opacity="0.5"/>
+    </filter>
+  </defs>
+  
+  <rect width="1000" height="600" fill="url(#bgGradient)"/>
+  
+  <!-- Decorative background elements -->
+  <circle cx="150" cy="100" r="80" fill="#4a90e2" opacity="0.1"/>
+  <circle cx="850" cy="400" r="60" fill="#7b68ee" opacity="0.1"/>
+  <circle cx="500" cy="500" r="40" fill="#ff6b6b" opacity="0.1"/>
+  
+  <!-- Title with glow effect -->
+  <text x="500" y="40" text-anchor="middle" fill="#00d4ff" font-family="Arial, sans-serif" font-size="28" font-weight="bold" filter="url(#glow)">
+    SDR Signal Processing Pipeline
+  </text>
+  
+  <!-- SDR Thread Box -->
+  <rect x="80" y="90" width="160" height="90" rx="15" ry="15" fill="url(#boxGradient1)" stroke="#ffffff" stroke-width="2" filter="url(#dropshadow)"/>
+  <text x="160" y="120" text-anchor="middle" fill="#ffffff" font-family="Arial, sans-serif" font-size="16" font-weight="bold">SDR Thread</text>
+  <text x="160" y="140" text-anchor="middle" fill="#e0e0e0" font-family="Arial, sans-serif" font-size="12">(Data Capture)</text>
+  <text x="160" y="155" text-anchor="middle" fill="#cccccc" font-family="Arial, sans-serif" font-size="10">Raw RF Signals</text>
+  
+  <!-- Arrow 1 with glow -->
+  <path d="M240 135 L300 135" stroke="#00d4ff" stroke-width="3" fill="none" marker-end="url(#arrowhead)" filter="url(#glow)"/>
+  <text x="270" y="125" text-anchor="middle" fill="#00d4ff" font-family="Arial, sans-serif" font-size="10">I/Q Data</text>
+  
+  <!-- Sample Buffer Box -->
+  <rect x="310" y="90" width="160" height="90" rx="15" ry="15" fill="url(#boxGradient2)" stroke="#ffffff" stroke-width="2" filter="url(#dropshadow)"/>
+  <text x="390" y="120" text-anchor="middle" fill="#ffffff" font-family="Arial, sans-serif" font-size="16" font-weight="bold">Sample Buffer</text>
+  <text x="390" y="140" text-anchor="middle" fill="#e0e0e0" font-family="Arial, sans-serif" font-size="12">(Lock-free FIFO)</text>
+  <text x="390" y="155" text-anchor="middle" fill="#cccccc" font-family="Arial, sans-serif" font-size="10">Thread Safe Queue</text>
+  
+  <!-- Arrow 2 with glow -->
+  <path d="M470 135 L530 135" stroke="#00d4ff" stroke-width="3" fill="none" marker-end="url(#arrowhead)" filter="url(#glow)"/>
+  <text x="500" y="125" text-anchor="middle" fill="#00d4ff" font-family="Arial, sans-serif" font-size="10">Samples</text>
+  
+  <!-- Acquisition Thread Pool Box -->
+  <rect x="540" y="90" width="160" height="90" rx="15" ry="15" fill="url(#boxGradient3)" stroke="#ffffff" stroke-width="2" filter="url(#dropshadow)"/>
+  <text x="620" y="120" text-anchor="middle" fill="#ffffff" font-family="Arial, sans-serif" font-size="16" font-weight="bold">Acquisition</text>
+  <text x="620" y="140" text-anchor="middle" fill="#e0e0e0" font-family="Arial, sans-serif" font-size="12">Thread Pool</text>
+  <text x="620" y="155" text-anchor="middle" fill="#cccccc" font-family="Arial, sans-serif" font-size="10">Signal Detection</text>
+  
+  <!-- Arrow 3 (down from buffer) with glow -->
+  <path d="M390 180 L390 250" stroke="#00d4ff" stroke-width="3" fill="none" marker-end="url(#arrowhead)" filter="url(#glow)"/>
+  <text x="420" y="215" fill="#00d4ff" font-family="Arial, sans-serif" font-size="10">Buffered</text>
+  <text x="420" y="225" fill="#00d4ff" font-family="Arial, sans-serif" font-size="10">Data</text>
+  
+  <!-- Arrow 4 (down from acquisition) with glow -->
+  <path d="M620 180 L620 250" stroke="#00d4ff" stroke-width="3" fill="none" marker-end="url(#arrowhead)" filter="url(#glow)"/>
+  <text x="650" y="215" fill="#00d4ff" font-family="Arial, sans-serif" font-size="10">Satellite</text>
+  <text x="650" y="225" fill="#00d4ff" font-family="Arial, sans-serif" font-size="10">IDs</text>
+  
+  <!-- Tracking Channels Box -->
+  <rect x="310" y="260" width="160" height="90" rx="15" ry="15" fill="url(#boxGradient4)" stroke="#ffffff" stroke-width="2" filter="url(#dropshadow)"/>
+  <text x="390" y="290" text-anchor="middle" fill="#ffffff" font-family="Arial, sans-serif" font-size="16" font-weight="bold">Tracking Channels</text>
+  <text x="390" y="310" text-anchor="middle" fill="#e0e0e0" font-family="Arial, sans-serif" font-size="12">(Per PRN)</text>
+  <text x="390" y="325" text-anchor="middle" fill="#cccccc" font-family="Arial, sans-serif" font-size="10">Code &amp; Carrier Lock</text>
+  
+  <!-- Arrow 5 (right to navigation) with glow -->
+  <path d="M470 305 L530 305" stroke="#00d4ff" stroke-width="3" fill="none" marker-end="url(#arrowhead)" filter="url(#glow)"/>
+  <text x="500" y="295" text-anchor="middle" fill="#00d4ff" font-family="Arial, sans-serif" font-size="10">Nav Bits</text>
+  
+  <!-- Navigation Decoder Box -->
+  <rect x="540" y="260" width="160" height="90" rx="15" ry="15" fill="url(#boxGradient5)" stroke="#ffffff" stroke-width="2" filter="url(#dropshadow)"/>
+  <text x="620" y="290" text-anchor="middle" fill="#ffffff" font-family="Arial, sans-serif" font-size="16" font-weight="bold">Navigation</text>
+  <text x="620" y="310" text-anchor="middle" fill="#e0e0e0" font-family="Arial, sans-serif" font-size="12">Decoder</text>
+  <text x="620" y="325" text-anchor="middle" fill="#cccccc" font-family="Arial, sans-serif" font-size="10">Position &amp; Time</text>
+  
+  <!-- Process indicators -->
+  <circle cx="160" cy="70" r="8" fill="#4ecdc4" opacity="0.8">
+    <animate attributeName="opacity" values="0.8;0.3;0.8" dur="2s" repeatCount="indefinite"/>
+  </circle>
+  <circle cx="390" cy="70" r="8" fill="#7b68ee" opacity="0.8">
+    <animate attributeName="opacity" values="0.3;0.8;0.3" dur="2s" repeatCount="indefinite"/>
+  </circle>
+  <circle cx="620" cy="70" r="8" fill="#ff6b6b" opacity="0.8">
+    <animate attributeName="opacity" values="0.8;0.3;0.8" dur="2s" repeatCount="indefinite"/>
+  </circle>
+  
+  <!-- Enhanced Legend with background -->
+  <rect x="50" y="420" width="900" height="160" rx="10" ry="10" fill="#000000" opacity="0.3" stroke="#4a90e2" stroke-width="1"/>
+  <text x="70" y="450" fill="#00d4ff" font-family="Arial, sans-serif" font-size="16" font-weight="bold">Signal Processing Flow:</text>
+  
+  <circle cx="80" cy="470" r="5" fill="#4a90e2"/>
+  <text x="95" y="475" fill="#ffffff" font-family="Arial, sans-serif" font-size="12">1. SDR captures raw RF signals from GPS satellites</text>
+  
+  <circle cx="80" cy="490" r="5" fill="#7b68ee"/>
+  <text x="95" y="495" fill="#ffffff" font-family="Arial, sans-serif" font-size="12">2. I/Q samples buffered in lock-free FIFO for thread safety</text>
+  
+  <circle cx="80" cy="510" r="5" fill="#ff6b6b"/>
+  <text x="95" y="515" fill="#ffffff" font-family="Arial, sans-serif" font-size="12">3. Acquisition threads detect and identify satellite signals</text>
+  
+  <circle cx="80" cy="530" r="5" fill="#4ecdc4"/>
+  <text x="95" y="535" fill="#ffffff" font-family="Arial, sans-serif" font-size="12">4. Tracking channels maintain lock on each satellite (PRN)</text>
+  
+  <circle cx="80" cy="550" r="5" fill="#feca57"/>
+  <text x="95" y="555" fill="#ffffff" font-family="Arial, sans-serif" font-size="12">5. Navigation decoder extracts positioning and timing data</text>
+</svg>
 ```
 
 ## 📈 Performance Characteristics
